@@ -22,4 +22,8 @@ jobs:
     - uses: actions/checkout@v2
     - uses: ./
       with:
-        milliseconds: 1000
+        email: ${{ SECRETS.EMAIL }}
+        password: ${{ SECRETS.PASSWORD }}
+        repotoken: ${{ SECRETS.REPOTOKEN }}
+        gituser: ${{ SECRETS.GITUSER }}
+        gitemail: ${{ SECRETS.GITEMAIL }}
