@@ -69,8 +69,10 @@ async function clone_repo(repository, repotoken) {
 
 async function commit_and_push(repository, repotoken, username, email) {
   const options = {
-    "user.name": username,
-    "user.email": email,
+    config: [
+      `user.name=${username}`,
+      `user.email=${email}`
+    ],
     baseDir: process.cwd() + "/projects",
     binary: "git",
     maxConcurrentProcesses: 6
