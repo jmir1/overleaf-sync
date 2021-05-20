@@ -1,5 +1,7 @@
 name: 'overleaf-sync'
 description: 'one-way sync your overleaf projects to github (two-way coming soon(tm))'
+icon: check-circle
+color: green
 inputs:
   password:
     description: 'your password for your overleaf account'
