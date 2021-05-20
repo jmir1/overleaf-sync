@@ -27,3 +27,4 @@ jobs:
         repotoken: ${{ SECRETS.INPUT_REPOTOKEN }}
         gituser: ${{ SECRETS.INPUT_GITUSER }}
         gitemail: ${{ SECRETS.INPUT_GITEMAIL }}
+        reponame: ${{ SECRETS.INPUT_REPONAME }}
