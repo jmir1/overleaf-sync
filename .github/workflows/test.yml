@@ -13,11 +13,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     with:
-      email: ${{ SECRETS.EMAIL }}
-      password: ${{ SECRETS.PASSWORD }}
-      repotoken: ${{ SECRETS.REPOTOKEN }}
-      gituser: ${{ SECRETS.GITUSER }}
-      gitemail: ${{ SECRETS.GITEMAIL }}
+      email: ${{ SECRETS.INPUT_EMAIL }}
+      password: ${{ SECRETS.INPUT_PASSWORD }}
+      repotoken: ${{ SECRETS.INPUT_REPOTOKEN }}
+      gituser: ${{ SECRETS.INPUT_GITUSER }}
+      gitemail: ${{ SECRETS.INPUT_GITEMAIL }}
     - run: npm ci
     - run: npm test
 
@@ -28,8 +28,8 @@ jobs:
     - uses: actions/checkout@v2
     - uses: ./
       with:
-        email: ${{ SECRETS.EMAIL }}
-        password: ${{ SECRETS.PASSWORD }}
-        repotoken: ${{ SECRETS.REPOTOKEN }}
-        gituser: ${{ SECRETS.GITUSER }}
-        gitemail: ${{ SECRETS.GITEMAIL }}
+        email: ${{ SECRETS.INPUT_EMAIL }}
+        password: ${{ SECRETS.INPUT_PASSWORD }}
+        repotoken: ${{ SECRETS.INPUT_REPOTOKEN }}
+        gituser: ${{ SECRETS.INPUT_GITUSER }}
+        gitemail: ${{ SECRETS.INPUT_GITEMAIL }}
