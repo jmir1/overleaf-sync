@@ -1,8 +1,11 @@
 const core = require("@actions/core");
+const io = require("@actions/io");
 const https = require("https");
 const parser = require("node-html-parser");
 const scparser = require("set-cookie-parser");
 const fs = require("fs");
+const yauzl = require("yauzl-promise");
+var Git = require("nodegit");
 
 // most @actions toolkit packages have async methods
 async function run() {
@@ -10,22 +13,24 @@ async function run() {
     const email = process.env.EMAIL;
     const password = process.env.PASSWORD;
     const start = new Date();
-    core.debug(new Date().toTimeString()); // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
+    core.debug("start time: " + new Date().toTimeString()); // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
 
     var logindata = await login(email, password);
     var allprojects = await parse_projects(logindata.projects);
     var activeprojects = allprojects.filter(
       (project) => !(project.archived || project.trashed)
     );
+    core.info(`found ${activeprojects.length} active projects.`);
+    console.log(make_index(activeprojects))
     for (project in activeprojects) {
       download_project(
-        activeprojects[project].id,
+        activeprojects[project],
         logindata.session,
         logindata.gclb
       );
     }
 
-    core.info(new Date().toTimeString());
+    core.debug("end time: " + new Date().toTimeString());
     const end = new Date();
     const time = end - start;
     core.setOutput("time", time);
@@ -42,19 +47,19 @@ async function login(email, password) {
     .parse(get.html)
     .querySelector(`meta[name="ol-csrfToken"]`)
     .getAttribute("content");
-  const session1 = scparser
-    .parse(get.headers["set-cookie"], { decodeValues: false })
-    .find((cookie) => cookie.name == "overleaf_session2").value;
-  const gclb = scparser
-    .parse(get.headers["set-cookie"], { decodeValues: false })
-    .find((cookie) => cookie.name == "GCLB").value;
+  const session1 = scparser(get.headers["set-cookie"], {
+    decodeValues: false
+  }).find((cookie) => cookie.name == "overleaf_session2").value;
+  const gclb = scparser(get.headers["set-cookie"], {
+    decodeValues: false
+  }).find((cookie) => cookie.name == "GCLB").value;
 
   //POST login data
   const post = await post_login(csrf, email, password, session1, gclb);
   //get necessary data from response
-  const session2 = scparser
-    .parse(post["set-cookie"], { decodeValues: false })
-    .find((cookie) => cookie.name == "overleaf_session2").value;
+  const session2 = scparser(post["set-cookie"], { decodeValues: false }).find(
+    (cookie) => cookie.name == "overleaf_session2"
+  ).value;
 
   //GET new csrf token from project page
   const projects = await get_projects(session2, gclb);
@@ -80,18 +85,49 @@ async function parse_projects(html) {
   return JSON.parse(projectstr);
 }
 
-async function download_project(project_id, session, gclb) {
-  const file = fs.createWriteStream(`${project_id}.zip`);
+async function download_project(project, session, gclb) {
+  io.mkdirP("zippedprojects");
+  io.mkdirP("projects");
+  const file = fs.createWriteStream(`zippedprojects/${project.id}.zip`);
   const options = {
     headers: { Cookie: `overleaf_session2=${session}; GCLB=${gclb}` }
   };
-  https.get(
-    `https://www.overleaf.com/project/${project_id}/download/zip`,
-    options,
-    function (response) {
-      response.pipe(file);
-    }
-  );
+  return new Promise((resolve) => {
+    https.get(
+      `https://www.overleaf.com/project/${project.id}/download/zip`,
+      options,
+      function (response) {
+        response.pipe(file);
+        response.on("end", () => {
+          unzip_project(project, resolve);
+        });
+      }
+    );
+  });
+}
+
+async function unzip_project(project, resolve) {
+  const foldername = project.name.replace(/ /g, "_");
+  io.mkdirP(`projects/${foldername}`);
+  const zipFile = await yauzl.open(`zippedprojects/${project.id}.zip`);
+  await zipFile.walkEntries(async function (entry) {
+    const readStream = await zipFile.openReadStream(entry);
+    readStream.pipe(
+      fs.createWriteStream(`projects/${foldername}/${entry.fileName}`)
+    );
+  });
+  await zipFile.close();
+  resolve();
+}
+
+function make_index(projects) {
+  var index = []
+  for (project in projects) {
+    let foldername = projects[project].name.replace(/ /g, "_");
+    let projid = projects[project].id;
+    index.push({id: projid, foldername: foldername});
+  }
+  return index;
 }
 
 async function get_login() {

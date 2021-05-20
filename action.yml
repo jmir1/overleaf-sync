@@ -2,7 +2,7 @@ name: 'Wait'
 env: 
   PASSWORD: ${{ secrets.PASSWORD }}
   EMAIL: ${{ secrets.EMAIL }}
-description: 'two-way sync your overleaf projects with github'
+description: 'one-way sync your overleaf projects to github (two-way coming soon)'
 inputs:
   project:  # id of input
     description: 'project id to sync only one'
