@@ -1,17 +1,27 @@
 const core = require("@actions/core");
+const github = require("@actions/github");
 const io = require("@actions/io");
 const https = require("https");
 const parser = require("node-html-parser");
 const scparser = require("set-cookie-parser");
 const fs = require("fs");
 const yauzl = require("yauzl-promise");
-var Git = require("nodegit");
+const { default: simpleGit } = require("simple-git");
+
+//global variables
+var foldernameindex = {};
+var number_of_unzipped = 0;
 
 // most @actions toolkit packages have async methods
 async function run() {
   try {
-    const email = process.env.EMAIL;
-    const password = process.env.PASSWORD;
+    const email = core.getInput("email", { required: true });
+    const password = core.getInput("password", { required: true });
+    const repotoken = core.getInput("repotoken", { required: true });
+    const repository = core.getInput("reponame", { required: true });
+    const gituser = core.getInput("gituser", { required: true });
+    const gitemail = core.getInput("gitemail", { required: true });
+
     const start = new Date();
     core.debug("start time: " + new Date().toTimeString()); // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
 
@@ -21,14 +31,18 @@ async function run() {
       (project) => !(project.archived || project.trashed)
     );
     core.info(`found ${activeprojects.length} active projects.`);
-    console.log(make_index(activeprojects))
-    for (project in activeprojects) {
+    foldernameindex = make_index(activeprojects);
+    await clone_repo(repository, repotoken);
+    await new Promise((resolve2) => {for (project in activeprojects) {
       download_project(
         activeprojects[project],
         logindata.session,
-        logindata.gclb
+        logindata.gclb,
+        resolve2,
+        activeprojects.length
       );
-    }
+    }});
+    await commit_and_push(repository, repotoken, gituser, gitemail);
 
     core.debug("end time: " + new Date().toTimeString());
     const end = new Date();
@@ -37,6 +51,29 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message);
   }
+}
+
+async function clone_repo(repository, repotoken) {
+  const options = {
+    baseDir: process.cwd(),
+    binary: "git",
+    maxConcurrentProcesses: 6
+  };
+  const git = simpleGit(options);
+  await git.clone(`https://jmir1:${repotoken}@github.com/${repository}.git`, "projects");
+}
+
+async function commit_and_push(repository, repotoken, username, email) {
+  const options = {
+    baseDir: process.cwd() + "/projects",
+    binary: "git",
+    maxConcurrentProcesses: 6
+  };
+  const git = simpleGit(options);
+  const commitoptions = {"--author": `${username} <${email}>`}
+  await git.add(".")
+  console.log(await git.commit("update repo", commitoptions));
+  console.log(await git.push(`https://${username}:${repotoken}@github.com/${repository}.git`));
 }
 
 async function login(email, password) {
@@ -85,14 +122,19 @@ async function parse_projects(html) {
   return JSON.parse(projectstr);
 }
 
-async function download_project(project, session, gclb) {
+async function download_project(
+  project,
+  session,
+  gclb,
+  resolve2,
+  number_to_unzip
+) {
   io.mkdirP("zippedprojects");
-  io.mkdirP("projects");
   const file = fs.createWriteStream(`zippedprojects/${project.id}.zip`);
   const options = {
     headers: { Cookie: `overleaf_session2=${session}; GCLB=${gclb}` }
   };
-  return new Promise((resolve) => {
+  await new Promise((resolve) => {
     https.get(
       `https://www.overleaf.com/project/${project.id}/download/zip`,
       options,
@@ -104,10 +146,12 @@ async function download_project(project, session, gclb) {
       }
     );
   });
+  number_of_unzipped++;
+  if (number_of_unzipped == number_to_unzip) resolve2();
 }
 
 async function unzip_project(project, resolve) {
-  const foldername = project.name.replace(/ /g, "_");
+  const foldername = foldernameindex[project.id];
   io.mkdirP(`projects/${foldername}`);
   const zipFile = await yauzl.open(`zippedprojects/${project.id}.zip`);
   await zipFile.walkEntries(async function (entry) {
@@ -121,11 +165,15 @@ async function unzip_project(project, resolve) {
 }
 
 function make_index(projects) {
-  var index = []
+  var index = {};
   for (project in projects) {
-    let foldername = projects[project].name.replace(/ /g, "_");
+    let dupenum = Object.entries(index).filter(
+      ([id, name]) => name == projects[project].name
+    ).length;
+    let suffix = dupenum > 0 ? `_(${dupenum})` : "";
+    let foldername = projects[project].name.replace(/ /g, "_") + suffix;
     let projid = projects[project].id;
-    index.push({id: projid, foldername: foldername});
+    index[projid] = foldername;
   }
   return index;
 }

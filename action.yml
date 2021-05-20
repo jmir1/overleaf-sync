@@ -2,12 +2,28 @@ name: 'Wait'
 env: 
   PASSWORD: ${{ secrets.PASSWORD }}
   EMAIL: ${{ secrets.EMAIL }}
-description: 'one-way sync your overleaf projects to github (two-way coming soon)'
+  GHTOKEN: ${{ secrets.GITHUB_TOKEN }}
+description: 'one-way sync your overleaf projects to github (two-way coming soon(tm))'
 inputs:
   project:  # id of input
     description: 'project id to sync only one'
     required: false
     default: '1000'
+  password:
+    description: 'your password for your overleaf account'
+    required: true
+  email:
+    description: 'your email for your overleaf account'
+    required: true
+  repotoken:
+    description: 'The GITHUB_TOKEN secret'
+    required: true
+  gitemail:
+    description: 'Your github account email'
+    required: true
+  gituser:
+    description: 'Your github username'
+    required: true
 outputs:
   time: # output will be available to future steps
     description: 'The message to output'
