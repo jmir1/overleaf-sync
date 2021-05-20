@@ -1,9 +1,12 @@
 name: 'Wait'
-description: 'Wait a designated number of milliseconds'
+env: 
+  PASSWORD: ${{ secrets.PASSWORD }}
+  EMAIL: ${{ secrets.EMAIL }}
+description: 'two-way sync your overleaf projects with github'
 inputs:
-  milliseconds:  # id of input
-    description: 'number of milliseconds to wait'
-    required: true
+  project:  # id of input
+    description: 'project id to sync only one'
+    required: false
     default: '1000'
 outputs:
   time: # output will be available to future steps
