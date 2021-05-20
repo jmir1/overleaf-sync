@@ -20,7 +20,7 @@ inputs:
     description: 'Your github repo name (where to sync your projects)'
     required: true
 outputs:
-  time: # output will be available to future steps
+  time:
     description: 'The time it took to sync'
 runs:
   using: 'node12'
