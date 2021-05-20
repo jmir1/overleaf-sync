@@ -1,5 +1,4 @@
 const core = require("@actions/core");
-const github = require("@actions/github");
 const io = require("@actions/io");
 const https = require("https");
 const parser = require("node-html-parser");
