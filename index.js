@@ -32,15 +32,17 @@ async function run() {
     core.info(`found ${activeprojects.length} active projects.`);
     foldernameindex = make_index(activeprojects);
     await clone_repo(repository, repotoken);
-    await new Promise((resolve2) => {for (project in activeprojects) {
-      download_project(
-        activeprojects[project],
-        logindata.session,
-        logindata.gclb,
-        resolve2,
-        activeprojects.length
-      );
-    }});
+    await new Promise((resolve2) => {
+      for (project in activeprojects) {
+        download_project(
+          activeprojects[project],
+          logindata.session,
+          logindata.gclb,
+          resolve2,
+          activeprojects.length
+        );
+      }
+    });
     await commit_and_push(repository, repotoken, gituser, gitemail);
 
     core.debug("end time: " + new Date().toTimeString());
@@ -59,7 +61,10 @@ async function clone_repo(repository, repotoken) {
     maxConcurrentProcesses: 6
   };
   const git = simpleGit(options);
-  await git.clone(`https://jmir1:${repotoken}@github.com/${repository}.git`, "projects");
+  await git.clone(
+    `https://jmir1:${repotoken}@github.com/${repository}.git`,
+    "projects"
+  );
 }
 
 async function commit_and_push(repository, repotoken, username, email) {
@@ -69,10 +74,17 @@ async function commit_and_push(repository, repotoken, username, email) {
     maxConcurrentProcesses: 6
   };
   const git = simpleGit(options);
-  const commitoptions = {"--author": `${username} <${email}>`}
-  await git.add(".")
-  console.log(await git.commit("update repo", commitoptions));
-  console.log(await git.push(`https://${username}:${repotoken}@github.com/${repository}.git`));
+  const commitoptions = { "--author": `${username} <${email}>` };
+  await git.add(".");
+  await git.commit("update repo", commitoptions);
+  try {
+    await git.push(
+      `https://${username}:${repotoken}@github.com/${repository}.git`
+    );
+    console.log("pushed to github.");
+  } catch (e) {
+    throw e;
+  }
 }
 
 async function login(email, password) {
