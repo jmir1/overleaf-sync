@@ -12,14 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: npm ci
-    - run: npm test
-    with:
+      with:
       email: ${{ SECRETS.INPUT_EMAIL }}
       password: ${{ SECRETS.INPUT_PASSWORD }}
       repotoken: ${{ SECRETS.INPUT_REPOTOKEN }}
       gituser: ${{ SECRETS.INPUT_GITUSER }}
       gitemail: ${{ SECRETS.INPUT_GITEMAIL }}
+    - run: npm ci
+    - run: npm test
 
   # test action works running from the graph
   test:
