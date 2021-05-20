@@ -1,8 +1,4 @@
-name: 'Wait'
-env: 
-  PASSWORD: ${{ secrets.PASSWORD }}
-  EMAIL: ${{ secrets.EMAIL }}
-  GHTOKEN: ${{ secrets.GITHUB_TOKEN }}
+name: 'overleaf-sync'
 description: 'one-way sync your overleaf projects to github (two-way coming soon(tm))'
 inputs:
   project:  # id of input
@@ -26,7 +22,7 @@ inputs:
     required: true
 outputs:
   time: # output will be available to future steps
-    description: 'The message to output'
+    description: 'The time it took to sync'
 runs:
   using: 'node12'
   main: 'dist/index.js'
