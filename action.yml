@@ -1,10 +1,6 @@
 name: 'overleaf-sync'
 description: 'one-way sync your overleaf projects to github (two-way coming soon(tm))'
 inputs:
-  project:  # id of input
-    description: 'project id to sync only one'
-    required: false
-    default: '1000'
   password:
     description: 'your password for your overleaf account'
     required: true
