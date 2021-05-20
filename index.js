@@ -17,7 +17,6 @@ async function run() {
     const email = core.getInput("email", { required: true });
     const password = core.getInput("password", { required: true });
     const repotoken = core.getInput("repotoken", { required: true });
-    const repository = core.getInput("reponame", { required: true });
     const gituser = core.getInput("gituser", { required: true });
     const gitemail = core.getInput("gitemail", { required: true });
 
