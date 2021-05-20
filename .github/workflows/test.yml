@@ -12,6 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    with:
+      email: ${{ SECRETS.EMAIL }}
+      password: ${{ SECRETS.PASSWORD }}
+      repotoken: ${{ SECRETS.REPOTOKEN }}
+      gituser: ${{ SECRETS.GITUSER }}
+      gitemail: ${{ SECRETS.GITEMAIL }}
     - run: npm ci
     - run: npm test
 
