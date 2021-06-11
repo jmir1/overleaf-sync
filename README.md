@@ -1,6 +1,6 @@
 # overleaf-sync action
 sync your overleaf projects with github!
-
+# DOESN'T WORK ANYMORE BECAUSE OVERLEAF RECENTLY INTRODUCED A NECESSARY CAPTCHA FOR LOGGING IN
 # USAGE:
 - create two repository secrets in the repo you want to sync your projects in:  
 `INPUT_EMAIL` and `INPUT_PASSWORD` containing your overleaf email and password
