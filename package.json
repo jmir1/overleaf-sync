@@ -28,7 +28,7 @@
     "@actions/core": "^1.2.5",
     "@actions/io": "^1.1.0",
     "https": "^1.0.0",
-    "node-html-parser": "^3.3.0",
+    "node-html-parser": "^4.0.0",
     "set-cookie-parser": "^2.4.8",
     "simple-git": "^2.39.0",
     "yauzl-promise": "^2.1.3"
